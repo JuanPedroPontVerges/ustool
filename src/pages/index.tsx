@@ -1,20 +1,30 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import { type NextPage } from "next";
 import Head from "next/head";
-import { SubmitHandler, useForm } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import { api } from "../utils/api";
-import { useState } from "react";
-import Form from "../components/Form";
+import { useEffect, useState } from "react";
 
 const Home: NextPage = () => {
   const greeting = api.chatgpt.hello.useQuery();
-  const form = useForm<any>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    trigger,
+    watch,
+  } = useForm();
   const [questions, setQuestions] =
     useState<{ id: string; content: string }[]>();
 
-  const onSubmitForm: SubmitHandler<any> = (input) => {
-    console.log("input", input);
-  };
+  const onSubmit: SubmitHandler<any> = (data) => alert(JSON.stringify(data));
+
+  useEffect(() => {
+    console.log("errors", errors);
+  }, [errors]);
+  // console.log(watch("question"));
   return (
     <>
       <Head>
@@ -30,9 +40,9 @@ const Home: NextPage = () => {
           <div className="grid w-2/3 grid-cols-1 gap-8">
             <div className="flex flex-col gap-4 rounded-t-lg bg-white/10 p-4 text-white hover:bg-white/20">
               <h3 className="text-4xl font-bold">Pregunta →</h3>
-              <Form form={form} onSubmitForm={onSubmitForm}>
+              <form name="question" onSubmit={handleSubmit(onSubmit)}>
                 <textarea
-                  {...form.register("question")}
+                  {...register("question")}
                   rows={8}
                   className="mt-1 block w-full rounded-md border-gray-300 text-xl text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   placeholder="Hola Chat, estoy haciendo una encuesta de satisfacción. Los usuarios, son comensales de un restaurante. Mi objetivo es hacer 5 preguntas de satisfacción de la forma más amable posible"
@@ -40,15 +50,15 @@ const Home: NextPage = () => {
                     "Hola Chat, estoy haciendo una encuesta de satisfacción. Los usuarios, son comensales de un restaurante. Mi objetivo es hacer 5 preguntas de satisfacción de la forma más amable posible"
                   }
                 />
-              </Form>
-              <div className="flex justify-center">
-                <button
-                  type="submit"
-                  className="w-1/2 rounded-md border border-transparent bg-[hsl(280,100%,70%)] py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  Preguntar
-                </button>
-              </div>
+                <div className="flex justify-center mt-8">
+                  <button
+                    type="submit"
+                    className="w-1/2 rounded-md border border-transparent bg-[hsl(280,100%,70%)] py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    Preguntar
+                  </button>
+                </div>
+              </form>
             </div>
             <div className="flex flex-col gap-4 rounded-b-lg bg-white/10 p-4 text-white hover:bg-white/20">
               <div className="text-right">
