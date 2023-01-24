@@ -3,28 +3,38 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
-
 import { api } from "../utils/api";
 import { useEffect, useState } from "react";
 
+type FormInput = {
+  question: string;
+};
+
 const Home: NextPage = () => {
-  const greeting = api.chatgpt.hello.useQuery();
+  const chatgpt = api.chatgpt.sendMessage.useMutation();
+  const chatModels = api.chatgpt.retrieveModels.useQuery();
   const {
     register,
     handleSubmit,
     formState: { errors },
     trigger,
     watch,
-  } = useForm();
+  } = useForm<FormInput>();
   const [questions, setQuestions] =
     useState<{ id: string; content: string }[]>();
 
-  const onSubmit: SubmitHandler<any> = (data) => alert(JSON.stringify(data));
-
+  const onSubmit: SubmitHandler<FormInput> = async (data) => {
+    const { question } = data;
+    await chatgpt.mutateAsync({ content: question });
+  };
   useEffect(() => {
-    console.log("errors", errors);
-  }, [errors]);
-  // console.log(watch("question"));
+    console.log("chatModels", chatModels);
+  }, [chatModels]);
+
+  if (chatgpt.isLoading) {
+    return <>Loading....</>;
+  }
+
   return (
     <>
       <Head>
@@ -45,12 +55,38 @@ const Home: NextPage = () => {
                   {...register("question")}
                   rows={8}
                   className="mt-1 block w-full rounded-md border-gray-300 text-xl text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  placeholder="Hola Chat, estoy haciendo una encuesta de satisfacción. Los usuarios, son comensales de un restaurante. Mi objetivo es hacer 5 preguntas de satisfacción de la forma más amable posible"
-                  defaultValue={
-                    "Hola Chat, estoy haciendo una encuesta de satisfacción. Los usuarios, son comensales de un restaurante. Mi objetivo es hacer 5 preguntas de satisfacción de la forma más amable posible"
-                  }
+                  placeholder="Hola Chat, estoy haciendo una encuesta de satisfacción. Los usuarios, son comensales de un restaurante. Mi objetivo es hacer preguntas de satisfacción de la forma más amable posible. Me tenes que hacer una pregunta por cada input:
+                  Inputs:  
+                  1- Lista desplegable
+                  2- Checkbox
+                  3- Radio button
+                  4- TextArea
+                  5- Puntaje del 1 al 5
+                  
+                  También quiero que lo único que me respondas sean solamente las 5 preguntas enumeradas, sin ninguna explicación. Me lo tenes que devolver en este formato JSON: 
+                  questions: [
+                    id,
+                    content,
+                    typeOfQuestion,
+                    options?,
+                  ]"
+                  defaultValue={`Hola Chat, estoy haciendo una encuesta de satisfacción. Los usuarios, son comensales de un restaurante. Mi objetivo es hacer preguntas de satisfacción de la forma más amable posible. Me tenes que hacer una pregunta por cada input:
+                  Inputs:  
+                  1- Lista desplegable
+                  2- Checkbox
+                  3- Radio button
+                  4- TextArea
+                  5- Puntaje del 1 al 5
+                  
+                  También quiero que lo único que me respondas sean solamente las 5 preguntas enumeradas, sin ninguna explicación. Me lo tenes que devolver en este formato JSON: 
+                  "questions": [
+                    id,
+                    content,
+                    typeOfQuestion,
+                    options?,
+                  ]`}
                 />
-                <div className="flex justify-center mt-8">
+                <div className="mt-8 flex justify-center">
                   <button
                     type="submit"
                     className="w-1/2 rounded-md border border-transparent bg-[hsl(280,100%,70%)] py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -65,7 +101,26 @@ const Home: NextPage = () => {
                 <h3 className="text-4xl font-bold">← Respuesta</h3>
               </div>
               <div className="mt-1 block h-44 w-full rounded-md border-gray-300 bg-white p-2 text-xl text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                Respuesta...
+                <div>
+                  {chatgpt.data?.questions?.map(
+                    ({ id, content, options, typeOfQuestion }) => {
+                      return (
+                        <>
+                          <div key={id}>
+                            {content} - {typeOfQuestion}
+                          </div>
+                          {options ? (
+                            <ol>
+                              {options.map((option, index) => (
+                                <li key={index}>{option}</li>
+                              ))}
+                            </ol>
+                          ) : null}
+                        </>
+                      );
+                    }
+                  ) || "No hay data"}
+                </div>
               </div>
               {/* <div className="flex justify-center">
                 <button

@@ -8,6 +8,7 @@ import { z } from "zod";
 export const serverSchema = z.object({
   DATABASE_URL: z.string().url(),
   NODE_ENV: z.enum(["development", "test", "production"]),
+  OPENAI_PUBLIC_KEY: z.string(),
 });
 
 /**
@@ -18,6 +19,7 @@ export const serverSchema = z.object({
 export const serverEnv = {
   DATABASE_URL: process.env.DATABASE_URL,
   NODE_ENV: process.env.NODE_ENV,
+  OPENAI_PUBLIC_KEY: process.env.OPENAI_PUBLIC_KEY
 };
 
 /**
